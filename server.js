@@ -4,11 +4,9 @@ const cors = require("cors");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-/* Middleware */
 app.use(cors());
 app.use(express.json());
 
-/* TEMP in-memory logs (later → SQL) */
 let logs = [
   {
     type: "admin",
@@ -18,12 +16,10 @@ let logs = [
   }
 ];
 
-/* ✅ GET logs (used by frontend) */
 app.get("/logs", (req, res) => {
   res.json(logs);
 });
 
-/* ✅ POST new log (Confirm button will hit this) */
 app.post("/logs", (req, res) => {
   const { type, author, message } = req.body;
 
@@ -31,23 +27,23 @@ app.post("/logs", (req, res) => {
     return res.status(400).json({ error: "Missing fields" });
   }
 
-  const newLog = {
+  const log = {
     type,
     author,
     message,
     timestamp: Date.now()
   };
 
-  logs.unshift(newLog); // newest first
+  logs.unshift(log);
+  console.log("New log:", log);
+
   res.json({ success: true });
 });
 
-/* Health check */
 app.get("/", (req, res) => {
   res.send("Backend is running");
 });
 
-/* Start server */
 app.listen(PORT, () => {
   console.log(`Backend running on port ${PORT}`);
 });
