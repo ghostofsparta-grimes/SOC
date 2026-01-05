@@ -67,25 +67,27 @@ app.get("/logs", (req, res) => {
 
 /* POST new log */
 app.post("/logs", (req, res) => {
-  const { type, author, message } = req.body;
+  ...
+});
 
-  if (!type || !author || !message) {
-    return res.status(400).json({ error: "Missing fields" });
+/* PLAYER LOOKUP — ADD HERE */
+app.get("/player/:name", async (req, res) => {
+  const name = req.params.name;
+
+  try {
+    const [rows] = await db.query(
+      "SELECT * FROM users WHERE username = ? LIMIT 1",
+      [name]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Player not found" });
+    }
+
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: "DB error" });
   }
-
-  const logs = readLogs();
-
-  const newLog = {
-    type,
-    author,
-    message,
-    timestamp: Date.now()
-  };
-
-  logs.unshift(newLog); // newest first
-  writeLogs(logs);
-
-  res.json({ success: true });
 });
 
 /* ===== START SERVER ===== */
