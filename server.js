@@ -67,7 +67,25 @@ app.get("/logs", (req, res) => {
 
 /* POST new log */
 app.post("/logs", (req, res) => {
-  ...
+  const { type, author, message } = req.body;
+
+  if (!type || !author || !message) {
+    return res.status(400).json({ error: "Missing fields" });
+  }
+
+  const logs = readLogs();
+
+  const newLog = {
+    type,
+    author,
+    message,
+    timestamp: Date.now()
+  };
+
+  logs.unshift(newLog);
+  writeLogs(logs);
+
+  res.json({ success: true });
 });
 
 /* PLAYER LOOKUP — ADD HERE */
