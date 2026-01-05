@@ -465,6 +465,28 @@ app.get("/economy", async (req, res) => {
     res.status(500).json({ error: "Economy load failed" });
   }
 });
+
+app.get("/economy/richest", async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        username,
+        (cash + bank + bank_balance) AS total_wealth,
+        cash,
+        bank,
+        bank_balance
+      FROM users
+      ORDER BY total_wealth DESC
+      LIMIT 10
+    `);
+
+    res.json(rows);
+
+  } catch (err) {
+    console.error("Richest players error:", err);
+    res.status(500).json({ error: "Failed to load richest players" });
+  }
+});
 /* ===== START SERVER ===== */
 app.listen(PORT, () => {
   console.log(`Backend running on port ${PORT}`);
