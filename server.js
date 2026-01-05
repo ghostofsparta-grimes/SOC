@@ -433,12 +433,12 @@ app.get("/player/:name/houses", async (req, res) => {
 });
 
 /* ===== ECONOMY ===== */
-app.get("/economy", async (req, res) => {
+app.get", async (req, res) => {
   try {
     // 1️⃣ Total player circulation (cash + bank)
     const [[circulation]] = await db.query(`
       SELECT
-        SUM(cash + bank) AS total
+        SUM(cash + bank + bank_balance) AS total
       FROM users
     `);
 
