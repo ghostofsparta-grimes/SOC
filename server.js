@@ -133,6 +133,30 @@ app.get("/player/:name", async (req, res) => {
     res.status(500).json({ error: "DB error" });
   }
 });
+
+/* PLAYER VEHICLES */
+app.get("/player/:name/vehicles", async (req, res) => {
+  const name = req.params.name;
+
+  try {
+    const [rows] = await db.query(
+      `
+      SELECT
+        modelid,
+        tickets
+      FROM vehicles
+      WHERE owner = ?
+      ORDER BY id ASC
+      `,
+      [name]
+    );
+
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "DB error" });
+  }
+});
 /* ===== START SERVER ===== */
 app.listen(PORT, () => {
   console.log(`Backend running on port ${PORT}`);
