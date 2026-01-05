@@ -433,24 +433,24 @@ app.get("/player/:name/houses", async (req, res) => {
 });
 
 /* ===== ECONOMY ===== */
-app.get", async (req, res) => {
+app.get("/economy", async (req, res) => {
   try {
-    // 1️⃣ Total player circulation (cash + bank)
+    // 1️⃣ Total player circulation (cash + bank + fleeca)
     const [[circulation]] = await db.query(`
       SELECT
         SUM(cash + bank + bank_balance) AS total
       FROM users
     `);
 
-    // 2️⃣ Government / businesses money
+    // 2️⃣ Government / business money
     const [[government]] = await db.query(`
       SELECT
         SUM(cash) AS total
       FROM businesses
     `);
 
-    // TEMP placeholders (until we add history table)
-    const yesterday = circulation.total * 1.997; // fake but consistent
+    // TEMP placeholders (until history table exists)
+    const yesterday = circulation.total * 1.997;
     const sevenDaysAgo = 0;
 
     res.json({
