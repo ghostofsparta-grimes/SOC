@@ -487,6 +487,37 @@ app.get("/economy/richest", async (req, res) => {
     res.status(500).json({ error: "Failed to load richest players" });
   }
 });
+
+app.get("/economy/top-vehicles", async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT 
+        modelid,
+        COUNT(*) AS total
+      FROM vehicles
+      WHERE ownerid > 0
+        AND impounded = 0
+      GROUP BY modelid
+      ORDER BY total DESC
+      LIMIT 8
+    `);
+
+    const mapped = rows.map(v => {
+      const index = v.modelid - 400;
+      return {
+        modelid: v.modelid,
+        name: VEHICLE_NAMES[index] || `Model ${v.modelid}`,
+        total: v.total
+      };
+    });
+
+    res.json(mapped);
+
+  } catch (err) {
+    console.error("Top vehicles error:", err);
+    res.status(500).json({ error: "Top vehicles failed" });
+  }
+});
 /* ===== START SERVER ===== */
 app.listen(PORT, () => {
   console.log(`Backend running on port ${PORT}`);
