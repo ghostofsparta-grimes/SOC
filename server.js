@@ -103,6 +103,7 @@ app.get("/player/:name", async (req, res) => {
     u.hours,
     u.cash,
     u.bank,
+    u.bank_balance,
     f.name AS faction_name
   FROM users u
   LEFT JOIN factions f ON f.id = u.faction
@@ -125,9 +126,10 @@ app.get("/player/:name", async (req, res) => {
   level: player.level,
   hours: player.hours,
   cash: player.cash,
-  bank: player.bank
+  bank: player.bank,
+  fleeca: player.bank_balance
 });
-
+    
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "DB error" });
