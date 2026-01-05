@@ -21,6 +21,18 @@ const db = mysql.createPool({
   connectionLimit: 5
 });
 
+const FACTIONS = {
+  -1: "Civilian",
+  1: "LSPD",
+  2: "FBI",
+  3: "Army",
+  4: "Mechanic",
+  5: "News",
+  6: "Medic",
+  7: "Taxi",
+  8: "Government"
+};
+
 /* Ensure data folder + file exist */
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR);
@@ -94,7 +106,7 @@ app.get("/player/:name", async (req, res) => {
 
   try {
     const [rows] = await db.query(
-      "SELECT * FROM users WHERE username = ? LIMIT 1",
+      "SELECT username, faction, rank, level, hours, cash, bank FROM users WHERE username = ? LIMIT 1",
       [name]
     );
 
@@ -102,12 +114,23 @@ app.get("/player/:name", async (req, res) => {
       return res.status(404).json({ error: "Player not found" });
     }
 
-    res.json(rows[0]);
+    const player = rows[0];
+
+    res.json({
+      username: player.username,
+      faction: FACTIONS[player.faction] ?? "Unknown",
+      rank: player.rank,
+      level: player.level,
+      hours: player.hours,
+      cash: player.cash,
+      bank: player.bank
+    });
+
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "DB error" });
   }
 });
-
 /* ===== START SERVER ===== */
 app.listen(PORT, () => {
   console.log(`Backend running on port ${PORT}`);
