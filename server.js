@@ -159,6 +159,55 @@ app.get("/player/:name/vehicles", async (req, res) => {
     res.status(500).json({ error: "DB error" });
   }
 });
+
+app.get("/player/:name/businesses", async (req, res) => {
+  const name = req.params.name;
+
+  try {
+    const [rows] = await db.query(
+      `
+      SELECT
+        id,
+        name,
+        price,
+        type,
+        locked
+      FROM businesses
+      WHERE owner = ?
+      `,
+      [name]
+    );
+
+    res.json(rows);
+  } catch (err) {
+    console.error("BUSINESSES ERROR:", err);
+    res.status(500).json({ error: "DB error" });
+  }
+});
+
+app.get("/player/:name/houses", async (req, res) => {
+  const name = req.params.name;
+
+  try {
+    const [rows] = await db.query(
+      `
+      SELECT 
+        id,
+        price,
+        level,
+        locked
+      FROM houses
+      WHERE owner = ?
+      `,
+      [name]
+    );
+
+    res.json(rows);
+  } catch (err) {
+    console.error("HOUSES ERROR:", err);
+    res.status(500).json({ error: "DB error" });
+  }
+});
 /* ===== START SERVER ===== */
 app.listen(PORT, () => {
   console.log(`Backend running on port ${PORT}`);
