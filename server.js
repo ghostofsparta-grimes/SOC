@@ -431,6 +431,34 @@ app.get("/player/:name/houses", async (req, res) => {
     res.status(500).json({ error: "DB error" });
   }
 });
+
+app.get("/economy/summary", async (req, res) => {
+  try {
+    const [[totals]] = await db.query(`
+      SELECT
+        SUM(cash) AS total_cash,
+        SUM(bank) AS total_bank,
+        SUM(fleeca) AS total_fleeca
+      FROM users
+    `);
+
+    const circulation =
+      (totals.total_cash || 0) +
+      (totals.total_bank || 0) +
+      (totals.total_fleeca || 0);
+
+    res.json({
+      circulation,
+      cash: totals.total_cash || 0,
+      bank: totals.total_bank || 0,
+      fleeca: totals.total_fleeca || 0
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Economy DB error" });
+  }
+});
 /* ===== START SERVER ===== */
 app.listen(PORT, () => {
   console.log(`Backend running on port ${PORT}`);
