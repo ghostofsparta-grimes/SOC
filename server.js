@@ -10,6 +10,17 @@ const PORT = process.env.PORT || 3000;
 const DATA_DIR = path.join(__dirname, "data");
 const LOG_FILE = path.join(DATA_DIR, "logs.json");
 
+const mysql = require("mysql2/promise");
+
+const db = mysql.createPool({
+  host: "51.38.205.167",
+  user: "u8308_Qm5Dxh5oda",
+  password: "hrlZLv@tk7c2jo0LMjNuK.DT",
+  database: "s8308_testserver",
+  waitForConnections: true,
+  connectionLimit: 5
+});
+
 /* Ensure data folder + file exist */
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR);
