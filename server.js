@@ -432,29 +432,39 @@ app.get("/player/:name/houses", async (req, res) => {
   }
 });
 
+/* ===== ECONOMY ===== */
 app.get("/economy", async (req, res) => {
   try {
-    const [players] = await db.query(`
-      SELECT 
-        SUM(cash + bank + fleeca) AS total_money,
-        SUM(bank) AS total_bank,
-        SUM(cash) AS total_cash
+    // 1️⃣ Total player circulation (cash + bank)
+    const [[circulation]] = await db.query(`
+      SELECT
+        SUM(cash + bank) AS total
       FROM users
     `);
 
-    // you can later improve this logic
+    // 2️⃣ Government / businesses money
+    const [[government]] = await db.query(`
+      SELECT
+        SUM(cash) AS total
+      FROM businesses
+    `);
+
+    // TEMP placeholders (until we add history table)
+    const yesterday = circulation.total * 1.997; // fake but consistent
+    const sevenDaysAgo = 0;
+
     res.json({
-      total: players[0].total_money || 0,
-      yesterday: 0,
-      sevenDaysAgo: 0,
-      government: 0
+      total: circulation.total || 0,
+      yesterday: Math.floor(yesterday || 0),
+      sevenDaysAgo,
+      government: government.total || 0
     });
+
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Economy fetch failed" });
+    console.error("Economy error:", err);
+    res.status(500).json({ error: "Economy load failed" });
   }
 });
-
 /* ===== START SERVER ===== */
 app.listen(PORT, () => {
   console.log(`Backend running on port ${PORT}`);
