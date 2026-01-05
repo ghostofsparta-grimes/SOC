@@ -21,18 +21,6 @@ const db = mysql.createPool({
   connectionLimit: 5
 });
 
-const FACTIONS = {
-  -1: "Civilian",
-  1: "LSPD",
-  2: "FBI",
-  3: "Army",
-  4: "Mechanic",
-  5: "News",
-  6: "Medic",
-  7: "Taxi",
-  8: "Government"
-};
-
 /* Ensure data folder + file exist */
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR);
@@ -106,10 +94,23 @@ app.get("/player/:name", async (req, res) => {
 
   try {
     const [rows] = await db.query(
-      "SELECT username, faction, rank, level, hours, cash, bank FROM users WHERE username = ? LIMIT 1",
-      [name]
-    );
-
+  `
+  SELECT
+    u.username,
+    u.faction,
+    u.factionrank,
+    u.level,
+    u.hours,
+    u.cash,
+    u.bank,
+    f.name AS faction_name
+  FROM users u
+  LEFT JOIN factions f ON f.id = u.faction
+  WHERE u.username = ?
+  LIMIT 1
+  `,
+  [name]
+);
     if (rows.length === 0) {
       return res.status(404).json({ error: "Player not found" });
     }
@@ -117,14 +118,15 @@ app.get("/player/:name", async (req, res) => {
     const player = rows[0];
 
     res.json({
-      username: player.username,
-      faction: FACTIONS[player.faction] ?? "Unknown",
-      rank: player.rank,
-      level: player.level,
-      hours: player.hours,
-      cash: player.cash,
-      bank: player.bank
-    });
+  username: player.username,
+  faction_id: player.faction,
+  faction_name: player.faction_name,
+  factionrank: player.factionrank,
+  level: player.level,
+  hours: player.hours,
+  cash: player.cash,
+  bank: player.bank
+});
 
   } catch (err) {
     console.error(err);
