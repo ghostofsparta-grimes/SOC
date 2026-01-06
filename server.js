@@ -657,6 +657,7 @@ app.get("/admin/logs", async (req, res) => {
   }
 });
 
+/* FACTION LOGS */
 app.get("/faction/logs", async (req, res) => {
   try {
     const page = parseInt(req.query.page || "1");
@@ -664,10 +665,12 @@ app.get("/faction/logs", async (req, res) => {
     const offset = (page - 1) * limit;
 
     const [rows] = await db.query(
-      `SELECT id, date, description
-       FROM log_faction
-       ORDER BY id DESC
-       LIMIT ? OFFSET ?`,
+      `
+      SELECT id, date, description
+      FROM log_faction
+      ORDER BY id DESC
+      LIMIT ? OFFSET ?
+      `,
       [limit, offset]
     );
 
