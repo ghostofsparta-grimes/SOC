@@ -754,6 +754,28 @@ app.get("/gangs/:id", async (req, res) => {
   }
 });
 
+/* ===== GANG MEMBERS ===== */
+app.get("/gangs/:id/members", async (req, res) => {
+  const gangId = Number(req.params.id);
+
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        username,
+        gangrank
+      FROM users
+      WHERE gang = ?
+      ORDER BY gangrank DESC, username ASC
+    `, [gangId]);
+
+    res.json(rows);
+
+  } catch (err) {
+    console.error("Gang members error:", err);
+    res.status(500).json({ error: "Failed to load gang members" });
+  }
+});
+
 /* ===============================
    ADMIN LOGIN
 ================================ */
