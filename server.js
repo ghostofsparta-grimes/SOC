@@ -765,7 +765,7 @@ app.post("/auth/login", async (req, res) => {
   try {
     const [[user]] = await db.query(
       `
-      SELECT username, password, admin
+      SELECT username, password, adminlevel
       FROM users
       WHERE username = ?
       LIMIT 1
@@ -774,26 +774,24 @@ app.post("/auth/login", async (req, res) => {
     );
 
     if (!user) {
-      return res.status(401).json({ error: "Invalid credentials" });
+      return res.status(401).json({ error: "Invalid username or password" });
     }
 
-    // ⚠️ If passwords are hashed later, we replace this check
+    // ⚠️ Plain-text password (as your server currently uses)
     if (user.password !== password) {
-      return res.status(401).json({ error: "Invalid credentials" });
+      return res.status(401).json({ error: "Invalid username or password" });
     }
 
-    // 🔐 ADMIN CHECK
-    if (user.admin !== 7) {
+    // 🔒 ADMIN CHECK
+    if (user.adminlevel !== 7) {
       return res.status(403).json({
-        error: "Unauthorized: Admin rank required"
+        error: "Unauthorized: Admin level 7 required"
       });
     }
 
-    // ✅ SUCCESS
     res.json({
       success: true,
-      username: user.username,
-      admin: user.admin
+      username: user.username
     });
 
   } catch (err) {
