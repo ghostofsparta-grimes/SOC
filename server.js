@@ -718,7 +718,40 @@ app.get("/gangs/richest", async (req, res) => {
     res.status(500).json({ error: "Failed to load richest gangs" });
   }
 });
-      
+
+app.get("/gangs/:id", async (req, res) => {
+  const id = Number(req.params.id);
+
+  try {
+    const [[gang]] = await db.query(`
+      SELECT
+        id,
+        name,
+        leader,
+        cash,
+        materials,
+        pot,
+        crack,
+        meth,
+        painkillers,
+        (cash + materials + pot + crack + meth + painkillers) AS total_wealth
+      FROM gangs
+      WHERE id = ?
+      LIMIT 1
+    `, [id]);
+
+    if (!gang) {
+      return res.status(404).json({ error: "Gang not found" });
+    }
+
+    res.json(gang);
+
+  } catch (err) {
+    console.error("Gang profile error:", err);
+    res.status(500).json({ error: "Failed to load gang profile" });
+  }
+});
+
 /* FACTION LOGS */
 app.get("/faction/logs", async (req, res) => {
   try {
