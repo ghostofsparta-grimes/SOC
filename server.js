@@ -657,35 +657,12 @@ app.get("/admin/logs", async (req, res) => {
   }
 });
 
-/* FACTION LOGS */
-app.get("/faction/logs", async (req, res) => {
-  try {
-    const page = parseInt(req.query.page || "1");
-    const limit = 20;
-    const offset = (page - 1) * limit;
-
-    const [rows] = await db.query(
-      `
-      SELECT id, date, description
-      FROM log_faction
-      ORDER BY id DESC
-      LIMIT ? OFFSET ?
-      `,
-      [limit, offset]
-    );
-
-    res.json({ logs: rows });
-
-  } catch (err) {
-    console.error("Faction logs error:", err);
-    res.status(500).json({ error: "Failed to load faction logs" });
-  }
-});
-
-/* FACTION PAY */
+/* ===============================
+   FACTION PAY
+================================ */
 app.get("/faction/pay", async (req, res) => {
-  const factionId = parseInt(req.query.faction);
-  const rank = parseInt(req.query.rank);
+  const factionId = Number(req.query.faction);
+  const rank = Number(req.query.rank);
 
   if (!factionId || !rank) {
     return res.status(400).json({ error: "Missing faction or rank" });
@@ -711,6 +688,31 @@ app.get("/faction/pay", async (req, res) => {
   } catch (err) {
     console.error("Faction pay error:", err);
     res.status(500).json({ error: "Failed to load faction pay" });
+  }
+});
+
+/* FACTION LOGS */
+app.get("/faction/logs", async (req, res) => {
+  try {
+    const page = parseInt(req.query.page || "1");
+    const limit = 20;
+    const offset = (page - 1) * limit;
+
+    const [rows] = await db.query(
+      `
+      SELECT id, date, description
+      FROM log_faction
+      ORDER BY id DESC
+      LIMIT ? OFFSET ?
+      `,
+      [limit, offset]
+    );
+
+    res.json({ logs: rows });
+
+  } catch (err) {
+    console.error("Faction logs error:", err);
+    res.status(500).json({ error: "Failed to load faction logs" });
   }
 });
 /* ===== START SERVER ===== */
