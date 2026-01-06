@@ -658,22 +658,21 @@ app.get("/admin/logs", async (req, res) => {
 });
 
 app.get("/faction/logs", async (req, res) => {
-  const page = Math.max(parseInt(req.query.page) || 1, 1);
-  const limit = 10;
-  const offset = (page - 1) * limit;
-
   try {
-    const [rows] = await pool.query(
-      `
-      SELECT id, date, description
-      FROM log_faction
-      ORDER BY id DESC
-      LIMIT ? OFFSET ?
-      `,
+    const page = parseInt(req.query.page || "1");
+    const limit = 20;
+    const offset = (page - 1) * limit;
+
+    const [rows] = await db.query(
+      `SELECT id, date, description
+       FROM log_faction
+       ORDER BY id DESC
+       LIMIT ? OFFSET ?`,
       [limit, offset]
     );
 
     res.json({ logs: rows });
+
   } catch (err) {
     console.error("Faction logs error:", err);
     res.status(500).json({ error: "Failed to load faction logs" });
