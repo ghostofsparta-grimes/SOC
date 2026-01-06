@@ -845,42 +845,31 @@ app.get("/factions/:id/members", async (req, res) => {
 });
 
 app.post("/admin/pay-cash", async (req, res) => {
-  const { username, amount, admin, reason } = req.body;
-
-  if (!username || !amount || amount <= 0) {
-    return res.status(400).json({ error: "Invalid data" });
-  }
-
   try {
-    // 1️⃣ Check player exists
-    const [player] = await db.query(
-      "SELECT id, cash FROM users WHERE username = ?",
-      [username]
-    );
+    const { username, amount, reason, admin } = req.body;
 
-    if (!player.length) {
-      return res.status(404).json({ error: "Player not found" });
+    if (!username || !amount || amount <= 0) {
+      return res.status(400).json({ error: "Invalid data" });
     }
 
-    // 2️⃣ Add cash
+    // ✅ Update user's cash (change "cash" if your column name is different)
     await db.query(
       "UPDATE users SET cash = cash + ? WHERE username = ?",
       [amount, username]
     );
 
-    // 3️⃣ Log admin action
+    // ✅ Insert into your log_admin table (your actual schema)
     await db.query(
-      `
-      INSERT INTO log_admin (admin, action, target, amount, reason)
-      VALUES (?, 'PAY_CASH', ?, ?, ?)
-      `,
-      [admin || "AdminPanel", username, amount, reason || "Cash payment"]
+      `INSERT INTO log_admin (date, description)
+       VALUES (NOW(), ?)`,
+      [
+        `Admin ${admin || "Panel"} paid ₦${amount} cash to ${username}. Reason: ${reason || "N/A"}`
+      ]
     );
 
     res.json({ success: true });
-
   } catch (err) {
-    console.error(err);
+    console.error("PAY CASH ERROR:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
