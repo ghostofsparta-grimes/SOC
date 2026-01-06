@@ -661,11 +661,11 @@ app.get("/admin/logs", async (req, res) => {
    FACTION PAY
 ================================ */
 app.get("/faction/pay", async (req, res) => {
-  const factionId = Number(req.query.faction);
-  const rank = Number(req.query.rank);
+  const factionId = parseInt(req.query.faction, 10);
+  const rank = parseInt(req.query.rank, 10);
 
-  if (!factionId || !rank) {
-    return res.status(400).json({ error: "Missing faction or rank" });
+  if (Number.isNaN(factionId) || Number.isNaN(rank)) {
+    return res.status(400).json({ error: "Invalid faction or rank" });
   }
 
   try {
@@ -673,21 +673,22 @@ app.get("/faction/pay", async (req, res) => {
       `
       SELECT amount
       FROM factionpay
-      WHERE id = ? AND \`rank\` = ?
+      WHERE faction_id = ? AND faction_rank = ?
       LIMIT 1
       `,
       [factionId, rank]
     );
 
-    if (!rows.length) {
-      return res.json({ amount: 0 });
-    }
-
-    res.json({ amount: rows[0].amount });
+    res.json({
+      amount: rows.length ? rows[0].amount : 0
+    });
 
   } catch (err) {
-    console.error("Faction pay SQL error:", err); // 👈 IMPORTANT
-    res.status(500).json({ error: "Failed to load faction pay" });
+    console.error("Faction pay SQL error:", err);
+    res.status(500).json({
+      error: "Failed to load faction pay",
+      sqlError: err.message
+    });
   }
 });
 
