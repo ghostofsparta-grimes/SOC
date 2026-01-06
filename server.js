@@ -12,8 +12,6 @@ const LOG_FILE = path.join(DATA_DIR, "logs.json");
 
 const mysql = require("mysql2/promise");
 
-const crypto = require("crypto");
-
 const db = mysql.createPool({
   host: "51.38.205.167",
   user: "u8308_Qm5Dxh5oda",
@@ -773,49 +771,6 @@ app.get("/gangs/:id/members", async (req, res) => {
   } catch (err) {
     console.error("Gang members error:", err);
     res.status(500).json({ error: "Failed to load gang members" });
-  }
-});
-
-/* ===============================
-   ADMIN LOGIN
-================================ */
-app.post("/auth/login", async (req, res) => {
-  const { username, password } = req.body;
-
-  if (!username || !password) {
-    return res.status(400).json({ error: "Missing credentials" });
-  }
-
-  const hashed = crypto
-    .createHash("sha512")
-    .update(password + username)
-    .digest("hex")
-    .toUpperCase();
-
-  try {
-    const [rows] = await db.query(
-      `
-      SELECT username, adminlevel
-      FROM users
-      WHERE username = ? AND password = ?
-      LIMIT 1
-      `,
-      [username, hashed]
-    );
-
-    if (!rows.length) {
-      return res.status(401).json({ error: "Invalid username or password" });
-    }
-
-    if (rows[0].adminlevel !== 7) {
-      return res.status(403).json({ error: "Unauthorized" });
-    }
-
-    res.json({ success: true, username: rows[0].username });
-
-  } catch (err) {
-    console.error("Login error:", err);
-    res.status(500).json({ error: "Server error" });
   }
 });
 
