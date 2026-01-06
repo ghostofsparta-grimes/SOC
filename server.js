@@ -684,6 +684,41 @@ app.get("/gang/logs", async (req, res) => {
   }
 });
 
+/* ===== RICHEST GANGS ===== */
+app.get("/gangs/richest", async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        id,
+        name,
+        leader,
+        cash,
+        materials,
+        pot,
+        crack,
+        meth,
+        painkillers,
+        (
+          cash +
+          materials +
+          pot +
+          crack +
+          meth +
+          painkillers
+        ) AS total_wealth
+      FROM gangs
+      ORDER BY total_wealth DESC
+      LIMIT 10
+    `);
+
+    res.json(rows);
+
+  } catch (err) {
+    console.error("Richest gangs error:", err);
+    res.status(500).json({ error: "Failed to load richest gangs" });
+  }
+});
+      
 /* FACTION LOGS */
 app.get("/faction/logs", async (req, res) => {
   try {
