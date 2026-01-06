@@ -681,6 +681,38 @@ app.get("/faction/logs", async (req, res) => {
     res.status(500).json({ error: "Failed to load faction logs" });
   }
 });
+
+/* FACTION PAY */
+app.get("/faction/pay", async (req, res) => {
+  const factionId = parseInt(req.query.faction);
+  const rank = parseInt(req.query.rank);
+
+  if (!factionId || !rank) {
+    return res.status(400).json({ error: "Missing faction or rank" });
+  }
+
+  try {
+    const [rows] = await db.query(
+      `
+      SELECT amount
+      FROM factionpay
+      WHERE id = ? AND rank = ?
+      LIMIT 1
+      `,
+      [factionId, rank]
+    );
+
+    if (!rows.length) {
+      return res.json({ amount: 0 });
+    }
+
+    res.json({ amount: rows[0].amount });
+
+  } catch (err) {
+    console.error("Faction pay error:", err);
+    res.status(500).json({ error: "Failed to load faction pay" });
+  }
+});
 /* ===== START SERVER ===== */
 app.listen(PORT, () => {
   console.log(`Backend running on port ${PORT}`);
