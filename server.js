@@ -518,6 +518,27 @@ app.get("/economy/top-vehicles", async (req, res) => {
     res.status(500).json({ error: "Top vehicles failed" });
   }
 });
+
+app.get("/economy/wealth-distribution", async (req, res) => {
+  try {
+    // total players
+    const [[totalPlayers]] = await db.query(`
+      SELECT COUNT(*) AS total FROM users
+    `);
+
+    // how many count as "rich"
+    const RICH_COUNT = 10;
+
+    res.json({
+      rich: Math.min(RICH_COUNT, totalPlayers.total),
+      others: Math.max(totalPlayers.total - RICH_COUNT, 0)
+    });
+
+  } catch (err) {
+    console.error("Wealth distribution error:", err);
+    res.status(500).json({ error: "Failed to load wealth distribution" });
+  }
+});
 /* ===== START SERVER ===== */
 app.listen(PORT, () => {
   console.log(`Backend running on port ${PORT}`);
