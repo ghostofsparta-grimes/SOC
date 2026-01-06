@@ -623,29 +623,36 @@ app.post("/events/pay-winner", async (req, res) => {
 });
 
 app.get("/admin/logs", async (req, res) => {
-  const page = Math.max(parseInt(req.query.page) || 1, 1);
-  const limit = 20;
+  const page = Number(req.query.page) || 1;
+  const admin = req.query.admin?.trim();
+  const limit = 10;
   const offset = (page - 1) * limit;
 
+  let sql = `
+    SELECT id, date, description
+    FROM log_admin
+  `;
+
+  const params = [];
+
+  // ✅ APPLY SEARCH FILTER
+  if (admin) {
+    sql += ` WHERE description LIKE ? `;
+    params.push(`%${admin}%`);
+  }
+
+  sql += `
+    ORDER BY date DESC
+    LIMIT ? OFFSET ?
+  `;
+
+  params.push(limit, offset);
+
   try {
-    const [rows] = await db.query(
-      `SELECT * FROM log_admin
-       ORDER BY date DESC
-       LIMIT ? OFFSET ?`,
-      [limit, offset]
-    );
-
-    const [[{ total }]] = await db.query(
-      `SELECT COUNT(*) AS total FROM log_admin`
-    );
-
-    res.json({
-      logs: rows,
-      page,
-      totalPages: Math.ceil(total / limit)
-    });
-
+    const [rows] = await db.query(sql, params);
+    res.json({ logs: rows });
   } catch (err) {
+    console.error("Admin logs error:", err);
     res.status(500).json({ error: "Failed to load admin logs" });
   }
 });
