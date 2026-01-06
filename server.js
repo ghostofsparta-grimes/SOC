@@ -764,12 +764,12 @@ app.post("/auth/login", async (req, res) => {
     return res.status(400).json({ error: "Missing credentials" });
   }
 
-  // 🔐 HASH INPUT PASSWORD (SHA-512)
-  const hashedPassword = crypto
+  // hash password (matches your users table)
+  const hashed = crypto
     .createHash("sha512")
     .update(password)
     .digest("hex")
-    .toUpperCase(); // IMPORTANT: your DB hash is uppercase
+    .toUpperCase();
 
   try {
     const [rows] = await db.query(
@@ -779,28 +779,25 @@ app.post("/auth/login", async (req, res) => {
       WHERE username = ? AND password = ?
       LIMIT 1
       `,
-      [username, hashedPassword]
+      [username, hashed]
     );
 
     if (!rows.length) {
       return res.status(401).json({ error: "Invalid username or password" });
     }
 
-    const user = rows[0];
-
-    if (user.adminlevel !== 7) {
-      return res.status(403).json({ error: "Unauthorized (Admin only)" });
+    if (rows[0].adminlevel !== 7) {
+      return res.status(403).json({ error: "Unauthorized" });
     }
 
     res.json({
       success: true,
-      username: user.username,
-      adminlevel: user.adminlevel
+      username: rows[0].username
     });
 
   } catch (err) {
     console.error("Login error:", err);
-    res.status(500).json({ error: "Login failed" });
+    res.status(500).json({ error: "Server error" });
   }
 });
 
