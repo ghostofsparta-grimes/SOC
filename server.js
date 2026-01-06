@@ -774,6 +774,58 @@ app.get("/gangs/:id/members", async (req, res) => {
   }
 });
 
+app.get("/factions/:id/members", async (req, res) => {
+  const id = Number(req.params.id);
+
+  try {
+    const [rows] = await db.query(`
+      SELECT
+        username,
+        factionrank
+      FROM users
+      WHERE faction = ?
+      ORDER BY factionrank DESC
+    `, [id]);
+
+    res.json(rows);
+
+  } catch (err) {
+    console.error("Faction members error:", err);
+    res.status(500).json({ error: "Failed to load faction members" });
+  }
+});
+
+/* ===== FACTION PROFILE ===== */
+app.get("/factions/:id", async (req, res) => {
+  const id = Number(req.params.id);
+
+  try {
+    const [[faction]] = await db.query(`
+      SELECT
+        id,
+        name,
+        shortname,
+        leader,
+        type,
+        rankcount,
+        turftokens
+      FROM factions
+      WHERE id = ?
+      LIMIT 1
+    `, [id]);
+
+    if (!faction) {
+      return res.status(404).json({ error: "Faction not found" });
+    }
+
+    res.json(faction);
+
+  } catch (err) {
+    console.error("Faction profile error:", err);
+    res.status(500).json({ error: "Failed to load faction profile" });
+  }
+});
+   
 /* FACTION LOGS */
 app.get("/faction/logs", async (req, res) => {
   try {
