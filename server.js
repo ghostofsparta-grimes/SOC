@@ -658,37 +658,29 @@ app.get("/admin/logs", async (req, res) => {
 });
 
 /* ===============================
-   FACTION PAY
+   GANG LOGS
 ================================ */
-app.get("/faction/pay", async (req, res) => {
-  const factionId = parseInt(req.query.faction, 10);
-  const rank = parseInt(req.query.rank, 10);
-
-  if (Number.isNaN(factionId) || Number.isNaN(rank)) {
-    return res.status(400).json({ error: "Invalid faction or rank" });
-  }
-
+app.get("/gang/logs", async (req, res) => {
   try {
+    const page = parseInt(req.query.page || "1", 10);
+    const limit = 20;
+    const offset = (page - 1) * limit;
+
     const [rows] = await db.query(
       `
-      SELECT amount
-      FROM factionpay
-      WHERE faction_id = ? AND faction_rank = ?
-      LIMIT 1
+      SELECT id, date, description
+      FROM log_gang
+      ORDER BY date DESC
+      LIMIT ? OFFSET ?
       `,
-      [factionId, rank]
+      [limit, offset]
     );
 
-    res.json({
-      amount: rows.length ? rows[0].amount : 0
-    });
+    res.json({ logs: rows });
 
   } catch (err) {
-    console.error("Faction pay SQL error:", err);
-    res.status(500).json({
-      error: "Failed to load faction pay",
-      sqlError: err.message
-    });
+    console.error("Gang logs error:", err);
+    res.status(500).json({ error: "Failed to load gang logs" });
   }
 });
 
