@@ -752,6 +752,56 @@ app.get("/gangs/:id", async (req, res) => {
   }
 });
 
+/* ===============================
+   ADMIN LOGIN
+================================ */
+app.post("/auth/login", async (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ error: "Missing credentials" });
+  }
+
+  try {
+    const [[user]] = await db.query(
+      `
+      SELECT username, password, admin
+      FROM users
+      WHERE username = ?
+      LIMIT 1
+      `,
+      [username]
+    );
+
+    if (!user) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    // ⚠️ If passwords are hashed later, we replace this check
+    if (user.password !== password) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    // 🔐 ADMIN CHECK
+    if (user.admin !== 7) {
+      return res.status(403).json({
+        error: "Unauthorized: Admin rank required"
+      });
+    }
+
+    // ✅ SUCCESS
+    res.json({
+      success: true,
+      username: user.username,
+      admin: user.admin
+    });
+
+  } catch (err) {
+    console.error("Login error:", err);
+    res.status(500).json({ error: "Login failed" });
+  }
+});
+
 /* FACTION LOGS */
 app.get("/faction/logs", async (req, res) => {
   try {
