@@ -539,6 +539,45 @@ app.get("/economy/wealth-distribution", async (req, res) => {
     res.status(500).json({ error: "Failed to load wealth distribution" });
   }
 });
+
+app.post("/events", async (req, res) => {
+  try {
+    const {
+      name,
+      prize,
+      event_date,
+      max_participants,
+      description,
+      created_by
+    } = req.body;
+
+    if (!name || !prize || !event_date || !max_participants) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    await db.query(
+      `
+      INSERT INTO events
+        (name, prize, event_date, max_participants, description, created_by)
+      VALUES (?, ?, ?, ?, ?, ?)
+      `,
+      [
+        name,
+        prize,
+        event_date,
+        max_participants,
+        description || "",
+        created_by || "Admin"
+      ]
+    );
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error("Create event error:", err);
+    res.status(500).json({ error: "Failed to create event" });
+  }
+});
 /* ===== START SERVER ===== */
 app.listen(PORT, () => {
   console.log(`Backend running on port ${PORT}`);
