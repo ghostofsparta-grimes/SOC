@@ -764,10 +764,9 @@ app.post("/auth/login", async (req, res) => {
     return res.status(400).json({ error: "Missing credentials" });
   }
 
-  // hash password (matches your users table)
   const hashed = crypto
     .createHash("sha512")
-    .update(password)
+    .update(password + username)
     .digest("hex")
     .toUpperCase();
 
@@ -790,10 +789,7 @@ app.post("/auth/login", async (req, res) => {
       return res.status(403).json({ error: "Unauthorized" });
     }
 
-    res.json({
-      success: true,
-      username: rows[0].username
-    });
+    res.json({ success: true, username: rows[0].username });
 
   } catch (err) {
     console.error("Login error:", err);
