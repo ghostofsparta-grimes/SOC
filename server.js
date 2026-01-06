@@ -843,7 +843,48 @@ app.get("/factions/:id/members", async (req, res) => {
     res.status(500).json({ error: "Failed to load faction members" });
   }
 });
-   
+
+app.post("/admin/pay-cash", async (req, res) => {
+  const { username, amount, admin, reason } = req.body;
+
+  if (!username || !amount || amount <= 0) {
+    return res.status(400).json({ error: "Invalid data" });
+  }
+
+  try {
+    // 1️⃣ Check player exists
+    const [player] = await db.query(
+      "SELECT id, cash FROM users WHERE username = ?",
+      [username]
+    );
+
+    if (!player.length) {
+      return res.status(404).json({ error: "Player not found" });
+    }
+
+    // 2️⃣ Add cash
+    await db.query(
+      "UPDATE users SET cash = cash + ? WHERE username = ?",
+      [amount, username]
+    );
+
+    // 3️⃣ Log admin action
+    await db.query(
+      `
+      INSERT INTO log_admin (admin, action, target, amount, reason)
+      VALUES (?, 'PAY_CASH', ?, ?, ?)
+      `,
+      [admin || "AdminPanel", username, amount, reason || "Cash payment"]
+    );
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 /* FACTION LOGS */
 app.get("/faction/logs", async (req, res) => {
   try {
