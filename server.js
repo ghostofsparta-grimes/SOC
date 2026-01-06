@@ -578,6 +578,49 @@ app.post("/events", async (req, res) => {
     res.status(500).json({ error: "Failed to create event" });
   }
 });
+
+app.post("/events/pay-winner", async (req, res) => {
+  const { username, amount, method, admin, event_id } = req.body;
+
+  if (!username || !amount || !method) {
+    return res.status(400).json({ error: "Missing fields" });
+  }
+
+  if (!["cash", "bank"].includes(method)) {
+    return res.status(400).json({ error: "Invalid payment method" });
+  }
+
+  try {
+    // Check player exists
+    const [[player]] = await db.query(
+      "SELECT id FROM users WHERE username = ?",
+      [username]
+    );
+
+    if (!player) {
+      return res.status(404).json({ error: "Player not found" });
+    }
+
+    // Pay player
+    await db.query(
+      `UPDATE users SET ${method} = ${method} + ? WHERE username = ?`,
+      [amount, username]
+    );
+
+    // Log payout
+    await db.query(
+      `INSERT INTO event_payouts (event_id, username, amount, method, paid_by)
+       VALUES (?, ?, ?, ?, ?)`,
+      [event_id || null, username, amount, method, admin || "Admin"]
+    );
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Payment failed" });
+  }
+});
 /* ===== START SERVER ===== */
 app.listen(PORT, () => {
   console.log(`Backend running on port ${PORT}`);
