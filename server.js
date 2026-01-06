@@ -673,7 +673,7 @@ app.get("/faction/pay", async (req, res) => {
       `
       SELECT amount
       FROM factionpay
-      WHERE id = ? AND rank = ?
+      WHERE id = ? AND \`rank\` = ?
       LIMIT 1
       `,
       [factionId, rank]
@@ -686,7 +686,7 @@ app.get("/faction/pay", async (req, res) => {
     res.json({ amount: rows[0].amount });
 
   } catch (err) {
-    console.error("Faction pay error:", err);
+    console.error("Faction pay SQL error:", err); // 👈 IMPORTANT
     res.status(500).json({ error: "Failed to load faction pay" });
   }
 });
