@@ -12,6 +12,8 @@ const LOG_FILE = path.join(DATA_DIR, "logs.json");
 
 const mysql = require("mysql2/promise");
 
+const crypto = require("crypto");
+
 const db = mysql.createPool({
   host: "51.38.205.167",
   user: "u8308_Qm5Dxh5oda",
@@ -762,36 +764,38 @@ app.post("/auth/login", async (req, res) => {
     return res.status(400).json({ error: "Missing credentials" });
   }
 
+  // 🔐 HASH INPUT PASSWORD (SHA-512)
+  const hashedPassword = crypto
+    .createHash("sha512")
+    .update(password)
+    .digest("hex")
+    .toUpperCase(); // IMPORTANT: your DB hash is uppercase
+
   try {
-    const [[user]] = await db.query(
+    const [rows] = await db.query(
       `
-      SELECT username, password, adminlevel
+      SELECT username, adminlevel
       FROM users
-      WHERE username = ?
+      WHERE username = ? AND password = ?
       LIMIT 1
       `,
-      [username]
+      [username, hashedPassword]
     );
 
-    if (!user) {
+    if (!rows.length) {
       return res.status(401).json({ error: "Invalid username or password" });
     }
 
-    // ⚠️ Plain-text password (as your server currently uses)
-    if (user.password !== password) {
-      return res.status(401).json({ error: "Invalid username or password" });
-    }
+    const user = rows[0];
 
-    // 🔒 ADMIN CHECK
     if (user.adminlevel !== 7) {
-      return res.status(403).json({
-        error: "Unauthorized: Admin level 7 required"
-      });
+      return res.status(403).json({ error: "Unauthorized (Admin only)" });
     }
 
     res.json({
       success: true,
-      username: user.username
+      username: user.username,
+      adminlevel: user.adminlevel
     });
 
   } catch (err) {
