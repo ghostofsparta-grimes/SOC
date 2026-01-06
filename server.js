@@ -621,6 +621,22 @@ app.post("/events/pay-winner", async (req, res) => {
     res.status(500).json({ error: "Payment failed" });
   }
 });
+
+app.get("/admin/logs", async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT id, date, description
+      FROM log_admin
+      ORDER BY date DESC
+      LIMIT 50
+    `);
+
+    res.json(rows);
+  } catch (err) {
+    console.error("Admin logs error:", err);
+    res.status(500).json({ error: "Failed to load admin logs" });
+  }
+});
 /* ===== START SERVER ===== */
 app.listen(PORT, () => {
   console.log(`Backend running on port ${PORT}`);
