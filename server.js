@@ -268,6 +268,39 @@ function writeLogs(logs) {
 
 /* ===== ROUTES ===== */
 
+const Gamedig = require("gamedig");
+
+app.get("/server/status", async (req, res) => {
+  try {
+    const state = await Gamedig.query({
+      type: "samp",
+      host: "51.38.205.167",
+      port: 26915,
+      maxAttempts: 2,
+      socketTimeout: 1500
+    });
+
+    res.json({
+      online: true,
+      hostname: state.name,
+      gamemode: state.raw.gamemode,
+      playersOnline: state.players.length,
+      maxPlayers: state.maxplayers,
+      players: state.players.map(p => ({
+        name: p.name,
+        score: p.score
+      }))
+    });
+  } catch (err) {
+    res.json({
+      online: false,
+      playersOnline: 0,
+      maxPlayers: 0,
+      players: []
+    });
+  }
+});
+
 /* Health check */
 app.get("/", (req, res) => {
   res.send("Backend is running");
