@@ -275,7 +275,7 @@ app.get("/server/status", async (req, res) => {
     const state = await Gamedig.query({
       type: "samp",
       host: "51.38.205.167",
-      port: 3306,
+      port: 16235,
       maxAttempts: 2,
       socketTimeout: 1500
     });
