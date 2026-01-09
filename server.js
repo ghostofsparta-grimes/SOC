@@ -268,6 +268,15 @@ function writeLogs(logs) {
 
 /* ===== ROUTES ===== */
 
+const JOB_NAMES = {
+  1: "Foodpanda",
+  2: "Forklifter",
+  3: "Mining",
+  4: "Construction",
+  5: "Butcher",
+  6: "Drugs"
+};
+
 const Gamedig = require("gamedig");
 
 app.get("/server/status", async (req, res) => {
@@ -907,6 +916,60 @@ app.post("/admin/pay-cash", async (req, res) => {
   }
 });
 
+app.get("/jobs/history", async (req, res) => {
+  const days = Number(req.query.days) || 1;
+  const since = Math.floor(Date.now() / 1000) - (days * 86400);
+
+  try {
+    const [rows] = await db.query(`
+      SELECT 
+        jobid,
+        SUM(amount) AS total
+      FROM job_logs
+      WHERE timestamp >= ?
+      GROUP BY jobid
+      ORDER BY total DESC
+    `, [since]);
+
+    const mapped = rows.map(r => ({
+      jobid: r.jobid,
+      job: JOB_NAMES[r.jobid] || `Job ${r.jobid}`,
+      total: r.total
+    }));
+
+    res.json(mapped);
+
+  } catch (err) {
+    console.error("Job history error:", err);
+    res.status(500).json({ error: "Failed to load job history" });
+  }
+});
+
+app.get("/jobs/summary", async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT 
+        jobid,
+        SUM(amount) AS total
+      FROM job_logs
+      GROUP BY jobid
+      ORDER BY total DESC
+    `);
+
+    const mapped = rows.map(r => ({
+      jobid: r.jobid,
+      job: JOB_NAMES[r.jobid] || `Job ${r.jobid}`,
+      total: r.total
+    }));
+
+    res.json(mapped);
+
+  } catch (err) {
+    console.error("Job summary error:", err);
+    res.status(500).json({ error: "Failed to load job summary" });
+  }
+});
+           
 /* FACTION LOGS */
 app.get("/faction/logs", async (req, res) => {
   try {
