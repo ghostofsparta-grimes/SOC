@@ -969,7 +969,43 @@ app.get("/jobs/summary", async (req, res) => {
     res.status(500).json({ error: "Failed to load job summary" });
   }
 });
-           
+
+app.get("/jobs/top/:jobid", async (req, res) => {
+  const jobid = Number(req.params.jobid);
+
+  try {
+    const [rows] = await db.query(`
+      SELECT u.username, SUM(j.amount) AS total
+      FROM job_logs j
+      JOIN users u ON u.id = j.playerid
+      WHERE j.jobid = ?
+      GROUP BY j.playerid
+      ORDER BY total DESC
+      LIMIT 5
+    `, [jobid]);
+
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to load top players" });
+  }
+});
+
+app.get("/jobs/total/:jobid", async (req, res) => {
+  const jobid = Number(req.params.jobid);
+
+  try {
+    const [[row]] = await db.query(`
+      SELECT SUM(amount) AS total
+      FROM job_logs
+      WHERE jobid = ?
+    `, [jobid]);
+
+    res.json({ total: row.total || 0 });
+  } catch {
+    res.status(500).json({ error: "Failed" });
+  }
+});
 /* FACTION LOGS */
 app.get("/faction/logs", async (req, res) => {
   try {
