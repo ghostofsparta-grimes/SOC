@@ -1006,6 +1006,28 @@ app.get("/jobs/total/:jobid", async (req, res) => {
     res.status(500).json({ error: "Failed" });
   }
 });
+app.get("/chat/proximity", async (req, res) => {
+  const search = req.query.search || "";
+  const page = Number(req.query.page) || 1;
+  const limit = 50;
+  const offset = (page - 1) * limit;
+
+  try {
+    const [rows] = await db.query(`
+      SELECT *
+      FROM proximity_chat_logs
+      WHERE speaker_name LIKE ?
+         OR listener_name LIKE ?
+      ORDER BY id DESC
+      LIMIT ? OFFSET ?
+    `, [`%${search}%`, `%${search}%`, limit, offset]);
+
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to load chat logs" });
+  }
+});
 /* FACTION LOGS */
 app.get("/faction/logs", async (req, res) => {
   try {
