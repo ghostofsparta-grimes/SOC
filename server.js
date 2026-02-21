@@ -1083,6 +1083,23 @@ app.get("/property/logs", async (req, res) => {
     res.status(500).json({ error: "Failed to load property logs" });
   }
 });
+app.get("/bans/logs", async (req, res) => {
+  const page = Number(req.query.page) || 1;
+  const limit = 50;
+  const offset = (page - 1) * limit;
+
+  try {
+    const [rows] = await db.query(
+      "SELECT id, date, description FROM log_bans ORDER BY id DESC LIMIT ? OFFSET ?",
+      [limit, offset]
+    );
+
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to load ban logs" });
+  }
+});
 /* FACTION LOGS */
 app.get("/faction/logs", async (req, res) => {
   try {
