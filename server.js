@@ -1066,6 +1066,23 @@ app.get("/jobs/top/:jobid", async (req, res) => {
     res.status(500).json({ error: "Failed" });
   }
 });
+app.get("/property/logs", async (req, res) => {
+  const page = Number(req.query.page) || 1;
+  const limit = 50;
+  const offset = (page - 1) * limit;
+
+  try {
+    const [rows] = await db.query(
+      "SELECT id, date, description FROM log_property ORDER BY id DESC LIMIT ? OFFSET ?",
+      [limit, offset]
+    );
+
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to load property logs" });
+  }
+});
 /* FACTION LOGS */
 app.get("/faction/logs", async (req, res) => {
   try {
