@@ -450,6 +450,24 @@ app.get("/player/:name/businesses", async (req, res) => {
   }
 });
 
+app.get("/cheat/logs", async (req, res) => {
+  const page = Number(req.query.page) || 1;
+  const limit = 50;
+  const offset = (page - 1) * limit;
+
+  try {
+    const [rows] = await db.query(
+      "SELECT id, date, description FROM log_cheat ORDER BY id DESC LIMIT ? OFFSET ?",
+      [limit, offset]
+    );
+
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to load cheat logs" });
+  }
+});
+
 app.get("/player/:name/houses", async (req, res) => {
   const name = req.params.name;
 
