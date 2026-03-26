@@ -359,7 +359,6 @@ app.get("/player/:name", async (req, res) => {
     u.hours,
     u.cash,
     u.bank,
-    u.bank_balance,
     f.name AS faction_name
   FROM users u
   LEFT JOIN factions f ON f.id = u.faction
@@ -382,8 +381,7 @@ app.get("/player/:name", async (req, res) => {
   level: player.level,
   hours: player.hours,
   cash: player.cash,
-  bank: player.bank,
-  fleeca: player.bank_balance
+  bank: player.bank
 });
     
   } catch (err) {
@@ -498,7 +496,7 @@ app.get("/economy", async (req, res) => {
     // 1️⃣ Total player circulation (cash + bank + fleeca)
     const [[circulation]] = await db.query(`
       SELECT
-        SUM(cash + bank + bank_balance) AS total
+        SUM(cash + bank) AS total
       FROM users
     `);
 
@@ -531,10 +529,9 @@ app.get("/economy/richest", async (req, res) => {
     const [rows] = await db.query(`
       SELECT
         username,
-        (cash + bank + bank_balance) AS total_wealth,
+        (cash + bank) AS total_wealth,
         cash,
-        bank,
-        bank_balance
+        bank
       FROM users
       ORDER BY total_wealth DESC
       LIMIT 10
