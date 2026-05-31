@@ -13,10 +13,10 @@ const LOG_FILE = path.join(DATA_DIR, "logs.json");
 const mysql = require("mysql2/promise");
 
 const db = mysql.createPool({
-  host: "135.148.164.122",
-  user: "u115647_oGK0x8knmj",
-  password: "0OzCsdyhh6kd@zgFmIboB2i+",
-  database: "s115647_db1774192086678",
+  host: "142.132.203.47",
+  user: "u168671_5qSxO9pno4",
+  password: "bskeidiY^5BxBEt4^wyu=Zti",
+  database: "s168671_BIGGEST",
   waitForConnections: true,
   connectionLimit: 5
 });
@@ -283,8 +283,8 @@ app.get("/server/status", async (req, res) => {
   try {
     const state = await Gamedig.query({
       type: "samp",
-      host: "135.148.164.122",
-      port: 11719,
+      host: "142.132.203.47",
+      port: 10584,
       maxAttempts: 2,
       socketTimeout: 1500
     });
