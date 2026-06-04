@@ -1190,6 +1190,167 @@ app.get("/faction/logs", async (req, res) => {
     res.status(500).json({ error: "Failed to load faction logs" });
   }
 });
+
+/* ===== GIVE ITEM ===== */
+app.post("/admin/give-item", async (req, res) => {
+  const { username, item, amount, admin } = req.body;
+  if (!username || !item || !amount || amount <= 0) {
+    return res.status(400).json({ error: "Missing or invalid fields" });
+  }
+
+  // Valid item columns from your users table
+  const VALID_ITEMS = [
+    "materials","pot","crack","meth","painkillers","seeds","ephedrine",
+    "muriaticacid","bakingsoda","cigars","weaponclip","spraycans",
+    "components","pistolammo","shotgunammo","smgammo","arammo","rifleammo",
+    "hpammo","poisonammo","fmjammo","bombs","goldbar","diamonds","ecoin",
+    "airtime","simcard","mobile_data","culvercoin","food","bandage","medkit",
+    "lockpick","repairkit","rope","blindfold","candy","water","calcium",
+    "sodium","acetone","heroin","cassava_seed","cassavas","corn_seed","corns",
+    "okra_seed","cabbage_seed","carrot_seed","yam_seed","potato_seed",
+    "banana_seed","tomato_seed","okra","cabbage","carrot","yam","potato",
+    "banana","tomato","water_can","c4","usb","gascan","backpack"
+  ];
+
+  if (!VALID_ITEMS.includes(item)) {
+    return res.status(400).json({ error: "Invalid item type" });
+  }
+
+  try {
+    // Check player exists
+    const [[player]] = await db.query("SELECT id FROM users WHERE username = ?", [username]);
+    if (!player) return res.status(404).json({ error: "Player not found" });
+
+    // Add item
+    await db.query(`UPDATE users SET ${item} = ${item} + ? WHERE username = ?`, [amount, username]);
+
+    // Log it
+    await db.query(
+      `INSERT INTO log_admin (date, description) VALUES (NOW(), ?)`,
+      [`Admin ${admin || "Panel"} gave ${amount}x ${item} to ${username}`]
+    );
+
+    res.json({ success: true, message: `Gave ${amount}x ${item} to ${username}` });
+  } catch (err) {
+    console.error("Give item error:", err);
+    res.status(500).json({ error: "Failed to give item" });
+  }
+});
+
+/* ===== GIVE CAR ===== */
+app.post("/admin/give-car", async (req, res) => {
+  const { username, modelid, color1, color2, admin } = req.body;
+  if (!username || !modelid) {
+    return res.status(400).json({ error: "Username and model ID required" });
+  }
+
+  try {
+    // Check player exists
+    const [[player]] = await db.query("SELECT id FROM users WHERE username = ?", [username]);
+    if (!player) return res.status(404).json({ error: "Player not found" });
+
+    // Get next vehicle ID
+    const [[maxId]] = await db.query("SELECT MAX(id) AS maxid FROM vehicles");
+    const newId = (maxId.maxid || 0) + 1;
+
+    // Insert vehicle
+    await db.query(
+      `INSERT INTO vehicles (
+        id, ownerid, owner, modelid, price, locked, plate, fuel, health,
+        pos_x, pos_y, pos_z, pos_a, color1, color2, paintjob, interior, world,
+        mod_1, mod_2, mod_3, mod_4, mod_5, mod_6, mod_7, mod_8, mod_9, mod_10,
+        mod_11, mod_12, mod_13, mod_14, cash, materials, pot, crack, meth,
+        painkillers, weapon_1, weapon_2, weapon_3, ammo_1, ammo_2, ammo_3,
+        gangid, factiontype, job, respawndelay, pistolammo, shotgunammo,
+        smgammo, arammo, rifleammo, hpammo, poisonammo, fmjammo, impounded,
+        companyid, currency
+      ) VALUES (
+        ?, ?, ?, ?, 0, 0, 'None', 100, 1000,
+        0, 0, 0, 0, ?, ?, -1, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0,
+        -1, 0, -1, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+        -1, 1
+      )`,
+      [newId, player.id, username, modelid, color1 || 0, color2 || 0]
+    );
+
+    // Log it
+    const carName = VEHICLE_NAMES[modelid - 400] || `Model ${modelid}`;
+    await db.query(
+      `INSERT INTO log_admin (date, description) VALUES (NOW(), ?)`,
+      [`Admin ${admin || "Panel"} gave ${carName} (ID:${modelid}) to ${username}`]
+    );
+
+    res.json({ success: true, message: `Gave ${carName} to ${username}`, vehicleId: newId });
+  } catch (err) {
+    console.error("Give car error:", err);
+    res.status(500).json({ error: "Failed to give car" });
+  }
+});
+
+/* ===== GET ITEMS LIST (for dropdown) ===== */
+app.get("/items/list", (req, res) => {
+  const items = [
+    { value: "materials", label: "Materials" },
+    { value: "pot", label: "Pot" },
+    { value: "crack", label: "Crack" },
+    { value: "meth", label: "Meth" },
+    { value: "painkillers", label: "Painkillers" },
+    { value: "seeds", label: "Seeds" },
+    { value: "cigars", label: "Cigars" },
+    { value: "weaponclip", label: "Weapon Clip" },
+    { value: "spraycans", label: "Spray Cans" },
+    { value: "components", label: "Components" },
+    { value: "pistolammo", label: "Pistol Ammo" },
+    { value: "shotgunammo", label: "Shotgun Ammo" },
+    { value: "smgammo", label: "SMG Ammo" },
+    { value: "arammo", label: "AR Ammo" },
+    { value: "rifleammo", label: "Rifle Ammo" },
+    { value: "hpammo", label: "HP Ammo" },
+    { value: "poisonammo", label: "Poison Ammo" },
+    { value: "fmjammo", label: "FMJ Ammo" },
+    { value: "bombs", label: "Bombs" },
+    { value: "goldbar", label: "Gold Bar" },
+    { value: "diamonds", label: "Diamonds" },
+    { value: "ecoin", label: "E-Coin" },
+    { value: "airtime", label: "Airtime" },
+    { value: "simcard", label: "SIM Card" },
+    { value: "mobile_data", label: "Mobile Data" },
+    { value: "culvercoin", label: "Culver Coin" },
+    { value: "food", label: "Food" },
+    { value: "bandage", label: "Bandage" },
+    { value: "medkit", label: "Medkit" },
+    { value: "lockpick", label: "Lockpick" },
+    { value: "repairkit", label: "Repair Kit" },
+    { value: "rope", label: "Rope" },
+    { value: "blindfold", label: "Blindfold" },
+    { value: "candy", label: "Candy" },
+    { value: "water", label: "Water" },
+    { value: "heroin", label: "Heroin" },
+    { value: "cassava_seed", label: "Cassava Seed" },
+    { value: "cassavas", label: "Cassavas" },
+    { value: "corn_seed", label: "Corn Seed" },
+    { value: "corns", label: "Corns" },
+    { value: "okra", label: "Okra" },
+    { value: "cabbage", label: "Cabbage" },
+    { value: "carrot", label: "Carrot" },
+    { value: "yam", label: "Yam" },
+    { value: "potato", label: "Potato" },
+    { value: "banana", label: "Banana" },
+    { value: "tomato", label: "Tomato" },
+    { value: "water_can", label: "Water Can" },
+    { value: "c4", label: "C4" },
+    { value: "usb", label: "USB" },
+    { value: "gascan", label: "Gas Can" },
+    { value: "backpack", label: "Backpack" }
+  ];
+  res.json(items);
+});
+
+
 /* ===== START SERVER ===== */
 app.listen(PORT, () => {
   console.log(`Backend running on port ${PORT}`);
